@@ -1,26 +1,26 @@
-const express = require('express')
-const bodyParser = require('body-parser')
-const mongoose = require('mongoose')
-const fs = require('fs')
-const morgan = require('morgan')
-const rfs = require('rotating-file-stream')
-const bitcoin = require('./providers/bitcoin.provider')
+const express = require("express");
+const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
+const fs = require("fs");
+const morgan = require("morgan");
+const rfs = require("rotating-file-stream");
+const bitcoin = require("./providers/bitcoin.provider");
 
-require('dotenv').config()
+require("dotenv").config();
 
-const server = express()
+const server = express();
 
 /**
  * Morgan logging http access in a new file each day
  */
-const logDirectory = './logs'
+const logDirectory = "./logs";
 if (fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)) {
-  const utcDate = new Date().toDateString()
-  const accessLogStream = rfs(`${utcDate}.log`, {
-    interval: '1d',
-    path: logDirectory
-  })
-  server.use(morgan('combined', { stream: accessLogStream }))
+  const utcDate = new Date().toDateString();
+  const accessLogStream = rfs.createStream(`${utcDate}.log`, {
+    interval: "1d",
+    path: logDirectory,
+  });
+  server.use(morgan("combined", { stream: accessLogStream }));
 }
 
 /**
@@ -29,22 +29,24 @@ if (fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)) {
 mongoose
   .connect(process.env.DB, {
     useUnifiedTopology: true,
-    useNewUrlParser: true
+    useNewUrlParser: true,
   })
-  .then(() => console.log('MongoDB connected!'))
+  .then(() => console.log("MongoDB connected!"))
   .catch((error) => {
-    console.error(`MongoDB error: ${error.message}!`)
-  })
+    console.error(`MongoDB error: ${error.message}!`);
+  });
 
 bitcoin
   .getBlockchainInfo()
   .then((response) => console.log(`Bitcoin connected to ${response} network!`))
   .catch((error) => {
-    console.error(`Bitcoin error: ${error.message}!`)
-  })
+    console.error(`Bitcoin error: ${error.message}!`);
+  });
 
-server.use(bodyParser.json())
-server.use(bodyParser.urlencoded({ extended: true }))
-require('./routes/example.route')(server)
+server.use(bodyParser.json());
+server.use(bodyParser.urlencoded({ extended: true }));
+require("./routes/example.route")(server);
 
-server.listen(process.env.PORT, () => console.log(`Big brother listening on port ${process.env.PORT}!`))
+server.listen(process.env.PORT, () =>
+  console.log(`Big brother listening on port ${process.env.PORT}!`)
+);
